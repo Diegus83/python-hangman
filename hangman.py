@@ -27,7 +27,7 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn    gggggggg::::::g mm
                                                            g::::::ggg:::::::g                                                            
                                                             gg:::::::::::::g                                                             
                                                               ggg::::::ggg                                                               
-                                                                 gggggg                                                                  
+                                                                 gggggg                                                      Version 0.1a                                                         
 '''
 
 MIN_WORD_LEN = 4
@@ -65,6 +65,8 @@ class Hangman:
         self.finished = False
     
     def __str__(self):
+        '''Create a printable version of the
+        courrent state of the game'''
         mystring = str('''
         Lives left: {}
         Wrong guesses: {}
@@ -73,6 +75,7 @@ class Hangman:
         return mystring
 
     def maskWord(self):
+        '''Mask the letters in the word at game'''
         masked = list(self.word)
         for n in range(len(masked)):
             if masked[n].isalpha():
@@ -80,6 +83,14 @@ class Hangman:
         return masked
 
     def validate(self, letter):
+        '''Check if the input letter is valid'''
+        if letter in self.word:
+            self.updateSecret(letter)
+        else:
+            self.lives -= 1
+            self.used += letter
+     
+    def updateSecret(self, letter):  
         for n in range(len(self.word)):
             if letter == self.word[n]:
                 self.secret[n] = letter
@@ -90,10 +101,14 @@ word = randomWord(words)
 
 hg = Hangman(word, LIVES, MASK)
 
-while not hg.finished:
+while hg.lives:
     print(hg)
     letter = input('Guess a letter: ')
     hg.validate(letter)
-    
 
-# keep track of number of guesses and lives remaining
+
+    # todo
+    # finish when lives = 0
+    # check for already entered guesses
+    # print word if game ends
+    # select dificulty (whole dictionary or most common words)
