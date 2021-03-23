@@ -2,7 +2,7 @@ import os
 import time
 import random
 
-BANNER = '''
+BANNER = """
                                                                                                                                          
                                                                                                                                          
 HHHHHHHHH     HHHHHHHHH                                                                                                                  
@@ -28,54 +28,66 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn    gggggggg::::::g mm
                                                             gg:::::::::::::g                                                             
                                                               ggg::::::ggg                                                               
                                                                  gggggg                                                      Version 0.1a                                                         
-'''
+"""
 
 MIN_WORD_LEN = 4
 LIVES = 7
-DICTIONARY = './1000.txt'
-MASK = '*'
+DICTIONARY = "./1000.txt"
+MASK = "_"
+
 
 def intro():
-    for n in range(1,8):
+    for n in range(1, 8):
         os.system("clear")
-        time.sleep(1/(2*n))
+        time.sleep(1 / (2 * n))
         print(BANNER)
-        time.sleep(1/(2*n))
+        time.sleep(1 / (2 * n))
     os.system("clear")
 
 
 def loadDict(DICTIONARY):
-    with open(DICTIONARY, 'r') as fopen:
-        words = fopen.read().split('\n')
+    with open(DICTIONARY, "r") as fopen:
+        words = fopen.read().split("\n")
     return words
 
+
 def randomWord(words):
-    word = ''
-    while len(word) < MIN_WORD_LEN: 
-        word = words.pop(random.randint(1,len(words)))
+    word = ""
+    while len(word) < MIN_WORD_LEN:
+        word = words.pop(random.randint(1, len(words)))
     return word
+
 
 class Hangman:
     def __init__(self, word, LIVES, MASK):
         self.word = word
         self.lives = LIVES
         self.mask = MASK
+        # this will be displayed to the player
         self.secret = self.maskWord()
-        self.used = ''
-        self.finished = False
-    
+        # this list keep track of the wrong guesses
+        self.usedLetters = []
+        # turn word into a set to get the number of unique letters
+        self.remainingLetters = len(set(self.word))
+        # flag to indicate the end of the game
+        self.over = False
+
     def __str__(self):
-        '''Create a printable version of the
-        courrent state of the game'''
-        mystring = str('''
+        """Create a printable version of the
+        courrent state of the game"""
+        mystring = str(
+            """
         Lives left: {}
         Wrong guesses: {}
         Word: {}
-        '''.format(self.lives, self.used, self.secret))
+        """.format(
+                self.lives, self.usedLetters, ' '.join(self.secret)
+            )
+        )
         return mystring
 
     def maskWord(self):
-        '''Mask the letters in the word at game'''
+        """Mask the letters in the word at game"""
         masked = list(self.word)
         for n in range(len(masked)):
             if masked[n].isalpha():
@@ -83,32 +95,57 @@ class Hangman:
         return masked
 
     def validate(self, letter):
-        '''Check if the input letter is valid'''
-        if letter in self.word:
+        """Check if the input letter is valid
+        Update the secret, remaning letters and internal counters"""
+        # a valid letter is in word and has not been used
+        if letter in self.word and letter not in self.usedLetters:
             self.updateSecret(letter)
+            self.remainingLetters -= 1
+            # when there are zero remaining letters the player has won
+            if self.remainingLetters == 0:
+                self.gameOver(True)
+        # if a letter has been used we don't punish the player
+        elif letter in self.usedLetters:
+            print("The letter '{}' has already been used, try again!".format(letter))
+        # if the letter is not valid we decrease the lives counter
+        # and update the used letters list
+        # if lives = 0 the player has lost
         else:
             self.lives -= 1
-            self.used += letter
-     
-    def updateSecret(self, letter):  
+            self.usedLetters.append(letter)
+            if self.lives == 0:
+                self.gameOver(False)
+
+    def updateSecret(self, letter):
         for n in range(len(self.word)):
             if letter == self.word[n]:
                 self.secret[n] = letter
 
+    def gameOver(self, value):
+        if value:
+            print("The word was: '{}'".format(self.word))
+            print("Congratulations, you won!")
+            # set lives to 0 to exit the loop
+            self.over = True
+        else:
+            print("The word was: '{}', better luck next time!".format(self.word))
+            self.over = True
+
 
 words = loadDict(DICTIONARY)
-word = randomWord(words)   
+word = randomWord(words)
 
 hg = Hangman(word, LIVES, MASK)
 
-while hg.lives:
+while not hg.over:
+    os.system('clear')
     print(hg)
-    letter = input('Guess a letter: ')
+    letter = input("Guess a letter: ")
     hg.validate(letter)
 
 
-    # todo
-    # finish when lives = 0
-    # check for already entered guesses
-    # print word if game ends
-    # select dificulty (whole dictionary or most common words)
+# todo
+# finish when lives = 0
+# check for already entered guesses
+# print word if game ends
+# select dificulty (whole dictionary or most common words)
