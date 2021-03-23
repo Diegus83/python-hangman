@@ -32,8 +32,8 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn    gggggggg::::::g mm
 
 MIN_WORD_LEN = 4
 LIVES = 7
-DICTIONARY = '../dictionaries/wordlist.txt'
-MASK = '_'
+DICTIONARY = './1000.txt'
+MASK = '*'
 
 def intro():
     for n in range(1,8):
@@ -44,24 +44,56 @@ def intro():
     os.system("clear")
 
 
-def loadDict():
+def loadDict(DICTIONARY):
     with open(DICTIONARY, 'r') as fopen:
         words = fopen.read().split('\n')
     return words
 
-def randomWord():
-    words = loadDict()
-    word = words.pop(random.randint(1,len(words)))
-    if len(word) > MIN_WORD_LEN:
-        return word
-    else:
-        randomWord()
+def randomWord(words):
+    word = ''
+    while len(word) < MIN_WORD_LEN: 
+        word = words.pop(random.randint(1,len(words)))
+    return word
+
+class Hangman:
+    def __init__(self, word, LIVES, MASK):
+        self.word = word
+        self.lives = LIVES
+        self.mask = MASK
+        self.secret = self.maskWord()
+        self.used = ''
+        self.finished = False
+    
+    def __str__(self):
+        mystring = str('''
+        Lives left: {}
+        Wrong guesses: {}
+        Word: {}
+        '''.format(self.lives, self.used, self.secret))
+        return mystring
+
+    def maskWord(self):
+        masked = list(self.word)
+        for n in range(len(masked)):
+            if masked[n].isalpha():
+                masked[n] = self.mask
+        return masked
+
+    def validate(self, letter):
+        for n in range(len(self.word)):
+            if letter == self.word[n]:
+                self.secret[n] = letter
 
 
+words = loadDict(DICTIONARY)
+word = randomWord(words)   
 
-# hangman object
-# choose a random word when created
-# display underscores for each letter
-# ask for input
+hg = Hangman(word, LIVES, MASK)
+
+while not hg.finished:
+    print(hg)
+    letter = input('Guess a letter: ')
+    hg.validate(letter)
+    
+
 # keep track of number of guesses and lives remaining
-# reveal correct guesses
