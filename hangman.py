@@ -1,38 +1,13 @@
+#!/usr/bin/env python3
+
 import os
 import time
 import random
+import banner
 
-BANNER = """
-                                                                                                                                         
-                                                                                                                                         
-HHHHHHHHH     HHHHHHHHH                                                                                                                  
-H:::::::H     H:::::::H                                                                                                                  
-H:::::::H     H:::::::H                                                                                                                  
-HH::::::H     H::::::HH                                                                                                                  
-  H:::::H     H:::::H    aaaaaaaaaaaaa  nnnn  nnnnnnnn       ggggggggg   ggggg   mmmmmmm    mmmmmmm     aaaaaaaaaaaaa  nnnn  nnnnnnnn    
-  H:::::H     H:::::H    a::::::::::::a n:::nn::::::::nn    g:::::::::ggg::::g mm:::::::m  m:::::::mm   a::::::::::::a n:::nn::::::::nn  
-  H::::::HHHHH::::::H    aaaaaaaaa:::::an::::::::::::::nn  g:::::::::::::::::gm::::::::::mm::::::::::m  aaaaaaaaa:::::an::::::::::::::nn 
-  H:::::::::::::::::H             a::::ann:::::::::::::::ng::::::ggggg::::::ggm::::::::::::::::::::::m           a::::ann:::::::::::::::n
-  H:::::::::::::::::H      aaaaaaa:::::a  n:::::nnnn:::::ng:::::g     g:::::g m:::::mmm::::::mmm:::::m    aaaaaaa:::::a  n:::::nnnn:::::n
-  H::::::HHHHH::::::H    aa::::::::::::a  n::::n    n::::ng:::::g     g:::::g m::::m   m::::m   m::::m  aa::::::::::::a  n::::n    n::::n
-  H:::::H     H:::::H   a::::aaaa::::::a  n::::n    n::::ng:::::g     g:::::g m::::m   m::::m   m::::m a::::aaaa::::::a  n::::n    n::::n
-  H:::::H     H:::::H  a::::a    a:::::a  n::::n    n::::ng::::::g    g:::::g m::::m   m::::m   m::::ma::::a    a:::::a  n::::n    n::::n
-HH::::::H     H::::::HHa::::a    a:::::a  n::::n    n::::ng:::::::ggggg:::::g m::::m   m::::m   m::::ma::::a    a:::::a  n::::n    n::::n
-H:::::::H     H:::::::Ha:::::aaaa::::::a  n::::n    n::::n g::::::::::::::::g m::::m   m::::m   m::::ma:::::aaaa::::::a  n::::n    n::::n
-H:::::::H     H:::::::H a::::::::::aa:::a n::::n    n::::n  gg::::::::::::::g m::::m   m::::m   m::::m a::::::::::aa:::a n::::n    n::::n
-HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn    gggggggg::::::g mmmmmm   mmmmmm   mmmmmm  aaaaaaaaaa  aaaa nnnnnn    nnnnnn
-                                                                      g:::::g                                                            
-                                                          gggggg      g:::::g                                                            
-                                                          g:::::gg   gg:::::g                                                            
-                                                           g::::::ggg:::::::g                                                            
-                                                            gg:::::::::::::g                                                             
-                                                              ggg::::::ggg                                                               
-                                                                 gggggg                                                      Version 0.1a                                                         
-"""
-
+DICTIONARY = "./1000.txt"
 MIN_WORD_LEN = 4
 LIVES = 7
-DICTIONARY = "./1000.txt"
 MASK = "_"
 
 
@@ -40,7 +15,7 @@ def intro():
     for n in range(1, 8):
         os.system("clear")
         time.sleep(1 / (2 * n))
-        print(BANNER)
+        print(banner.BANNER)
         time.sleep(1 / (2 * n))
     os.system("clear")
 
@@ -56,6 +31,12 @@ def randomWord(words):
     while len(word) < MIN_WORD_LEN:
         word = words.pop(random.randint(1, len(words)))
     return word
+
+
+def newGame():
+    word = randomWord(words)
+    hg = Hangman(word, LIVES, MASK)
+    return hg
 
 
 class Hangman:
@@ -75,13 +56,9 @@ class Hangman:
     def __str__(self):
         """Create a printable version of the
         courrent state of the game"""
-        mystring = str(
-            """
-        Lives left: {}
-        Wrong guesses: {}
-        Word: {}
+        mystring = str("""Lives left: {}\nUsed letters: {}\nWord: {}
         """.format(
-                self.lives, self.usedLetters, ' '.join(self.secret)
+                self.lives, ",".join(self.usedLetters), " ".join(self.secret)
             )
         )
         return mystring
@@ -100,6 +77,7 @@ class Hangman:
         # a valid letter is in word and has not been used
         if letter in self.word and letter not in self.usedLetters:
             self.updateSecret(letter)
+            self.usedLetters.append(letter)
             self.remainingLetters -= 1
             # when there are zero remaining letters the player has won
             if self.remainingLetters == 0:
@@ -123,8 +101,10 @@ class Hangman:
 
     def gameOver(self, value):
         if value:
+            os.system("clear")
+            print(self)
             print("The word was: '{}'".format(self.word))
-            print("Congratulations, you won!")
+            print("Congratulations, you guessed it!")
             # set lives to 0 to exit the loop
             self.over = True
         else:
@@ -132,20 +112,35 @@ class Hangman:
             self.over = True
 
 
+#  display the cool intro
+# intro()
+
+# prepare the dictionary
 words = loadDict(DICTIONARY)
-word = randomWord(words)
 
-hg = Hangman(word, LIVES, MASK)
+player = input("Enter player's name and press Return\n")
+print("Hi {}, let's play a game of hangman".format(player))
 
-while not hg.over:
-    os.system('clear')
-    print(hg)
-    letter = input("Guess a letter: ")
-    hg.validate(letter)
-
+# repl
+while True:
+    hg = newGame()
+    while not hg.over:
+        os.system("clear")
+        print(hg)
+        letter = input("Guess a letter: ")
+        hg.validate(letter)
+    print("Good game {}, would you like to play again?".format(player))
+    choice = input("Enter y or n and hit Return: ")
+    if choice == "y":
+        continue
+    else:
+        print("Ok, bye {}!".format(player))
+        break
 
 # todo
-# finish when lives = 0
-# check for already entered guesses
-# print word if game ends
+# add repl to allow multiple games
+# filter multicharacter input
+# fix the game logic when repeating the same letter
+# add support for hyphens
 # select dificulty (whole dictionary or most common words)
+# print the complete word when the user guess the final letter
